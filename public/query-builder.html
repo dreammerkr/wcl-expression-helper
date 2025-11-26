@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCL GraphQL Query Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            background: white;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .checkbox-item .spell-id {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .query-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .copy-button:hover {
+            background: #5568d3;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WCL GraphQL Query Builder</h1>
+            <p>Build GraphQL queries for Warcraft Logs API</p>
+        </div>
+
+        <div class="content">
+            <!-- Left Side: Query Parameters -->
+            <div class="section">
+                <h2>Query Parameters</h2>
+
+                <div class="info-box">
+                    <strong>How it works:</strong> Select the data type and abilities you want to query. The generated query string can be used with any report code and fight ID.
+                </div>
+
+                <div class="input-group">
+                    <label for="dataType">Data Type</label>
+                    <select id="dataType">
+                        <option value="Casts">Casts</option>
+                        <option value="DamageDone">Damage Done</option>
+                        <option value="Healing">Healing</option>
+                        <option value="Deaths">Deaths</option>
+                        <option value="Buffs">Buffs</option>
+                        <option value="Debuffs">Debuffs</option>
+                    </select>
+                </div>
+
+                <h2 style="margin-top: 30px;">Select Abilities</h2>
+
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="selectAllSkills()">Select All</button>
+                    <button class="btn-secondary" onclick="deselectAllSkills()">Deselect All</button>
+                    <button class="btn-secondary" onclick="selectHealingCDs()">Healing CDs Only</button>
+                </div>
+
+                <div class="checkbox-group" id="skillCheckboxes"></div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="generateQuery()">Generate Query</button>
+                </div>
+            </div>
+
+            <!-- Right Side: Generated Query -->
+            <div class="section">
+                <h2>Generated GraphQL Query</h2>
+
+                <div class="query-output" id="queryOutput">
+                    <button class="copy-button" onclick="copyQuery()">Copy</button>
+                    <span style="color: #a0aec0;">Click "Generate Query" to see the GraphQL query string...</span>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <strong>Usage:</strong> Replace <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">REPORT_CODE</code> and <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">FIGHT_ID</code> with your actual values, then use with WCL API at:<br>
+                    <code style="background: #fff; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px;">
+                        https://www.warcraftlogs.com/api/v2/client
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Healing and Defensive Cooldowns - TWW Season 3
+        const ABILITIES = {
+            // Druid - Restoration
+            740: 'Tranquility',
+            197721: 'Flourish',
+            // Monk - Mistweaver
+            115310: 'Revival',
+            // Paladin - Holy
+            31821: 'Aura Mastery',
+            // Priest - Discipline
+            62618: 'Power Word: Barrier',
+            // Priest - Holy
+            64843: 'Divine Hymn',
+            265202: 'Holy Word: Salvation',
+            // Shaman - Restoration
+            114052: 'Ascendance',
+            108280: 'Healing Tide Totem',
+            98008: 'Spirit Link Totem',
+            // Evoker - Preservation
+            363534: 'Rewind',
+            355936: 'Dream Breath',
+            // Utility/Defensive
+            97462: 'Rallying Cry',
+            196718: 'Darkness'
+        };
+
+        const HEALING_CD_IDS = [740, 197721, 115310, 31821, 62618, 64843, 265202, 114052, 108280, 98008, 363534, 355936, 97462, 196718];
+
+        // Initialize checkboxes
+        function initializeCheckboxes() {
+            const container = document.getElementById('skillCheckboxes');
+            container.innerHTML = '';
+
+            Object.entries(ABILITIES).forEach(([id, name]) => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                div.innerHTML = `
+                    <input type="checkbox" id="skill_${id}" value="${id}">
+                    <label for="skill_${id}">
+                        ${name}
+                        <span class="spell-id">(ID: ${id})</span>
+                    </label>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function selectAllSkills() {
+            document.querySelectorAll('#skillCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+        }
+
+        function deselectAllSkills() {
+            document.querySelectorAll('#skillCheckboxes input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        function selectHealingCDs() {
+            deselectAllSkills();
+            HEALING_CD_IDS.forEach(id => {
+                const checkbox = document.getElementById(`skill_${id}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        function getSelectedAbilities() {
+            const selected = [];
+            document.querySelectorAll('#skillCheckboxes input[type="checkbox"]:checked').forEach(cb => {
+                selected.push(cb.value);
+            });
+            return selected;
+        }
+
+        function generateQuery() {
+            const dataType = document.getElementById('dataType').value;
+            const selectedAbilities = getSelectedAbilities();
+
+            if (selectedAbilities.length === 0) {
+                alert('Please select at least one ability');
+                return;
+            }
+
+            // Build ability filter
+            const abilityFilter = `abilityID: [${selectedAbilities.join(', ')}]`;
+
+            // Combine filters
+            const filters = [
+                'fightIDs: [FIGHT_ID]',
+                `dataType: ${dataType}`,
+                abilityFilter
+            ].join('\n      ');
+
+            // Generate GraphQL query
+            const query = `query {
+  reportData {
+    report(code: "REPORT_CODE") {
+      events(
+      ${filters}
+      ) {
+        data
+        nextPageTimestamp
+      }
+    }
+  }
+}`;
+
+            // Display query
+            const outputDiv = document.getElementById('queryOutput');
+            outputDiv.innerHTML = `<button class="copy-button" onclick="copyQuery()">Copy</button>${query}`;
+        }
+
+        function copyQuery() {
+            const queryText = document.getElementById('queryOutput').textContent.replace('Copy', '').trim();
+            navigator.clipboard.writeText(queryText).then(() => {
+                const button = document.querySelector('.copy-button');
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Initialize on load
+        initializeCheckboxes();
+    </script>
+</body>
+</html>

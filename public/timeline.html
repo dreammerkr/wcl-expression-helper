@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCL Skill Timeline Visualizer</title>
+    <script>const whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: true};</script>
+    <script src="https://wow.zamimg.com/js/tooltips.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow-x: hidden;
+            overflow-y: visible;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-field label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .input-field input {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            padding: 20px;
+            margin: 20px;
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            border-radius: 6px;
+            color: #721c24;
+        }
+
+        .timeline-container {
+            padding: 40px 20px;
+            overflow-x: visible;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media (min-width: 768px) {
+            .timeline-container {
+                padding: 40px;
+            }
+        }
+
+        .timeline-info {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #e7f3ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .timeline-info h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .timeline-info p {
+            color: #495057;
+            margin: 5px 0;
+        }
+
+        .timeline {
+            position: relative;
+            min-height: 300px;
+            padding: 60px 30px 100px 30px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .timeline-line {
+            position: absolute;
+            top: 150px;
+            left: 30px;
+            right: 30px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .timeline-markers {
+            position: relative;
+            min-height: 300px;
+            width: 100%;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 125px;
+            z-index: 1;
+            max-width: 48px;
+        }
+
+        .time-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border: 3px solid white;
+            border-radius: 50%;
+            top: 144px;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+        }
+
+        .skill-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 3px solid #667eea;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-weight: bold;
+            font-size: 0.8em;
+            color: #667eea;
+            position: relative;
+        }
+
+        .skill-icon:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            z-index: 100;
+        }
+
+        .skill-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+        }
+
+        .skill-icon .wowhead-spell-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .skill-icon .wowhead-spell-link img {
+            border-radius: 6px !important;
+            border: none !important;
+        }
+
+        .skill-icon .iconmedium {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 6px !important;
+        }
+
+        .skill-time {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75em;
+            color: #6c757d;
+            white-space: nowrap;
+            background: white;
+            padding: 3px 6px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .skill-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .time-labels {
+            position: relative;
+            height: 30px;
+            margin-top: 20px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 10px;
+            width: 100%;
+        }
+
+        .time-label {
+            position: absolute;
+            font-size: 0.8em;
+            color: #6c757d;
+            transform: translateX(-50%);
+        }
+
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .legend h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .legend-text {
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .legend-count {
+            margin-left: auto;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WCL Skill Timeline Visualizer</h1>
+            <p>Visualize ability usage throughout a fight</p>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="reportCode">Report Code</label>
+                    <input type="text" id="reportCode" placeholder="e.g., ABC123" value="">
+                </div>
+                <div class="input-field">
+                    <label for="fightID">Fight ID</label>
+                    <input type="number" id="fightID" placeholder="e.g., 1" value="1">
+                </div>
+                <div class="input-field">
+                    <label for="abilityIDs">Ability IDs (comma-separated, optional)</label>
+                    <input type="text" id="abilityIDs" placeholder="e.g., 740,115310,64843">
+                </div>
+                <div class="input-field">
+                    <label for="sourceID">Source ID (optional)</label>
+                    <input type="number" id="sourceID" placeholder="e.g., 5">
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="loadTimeline()">Load Timeline</button>
+                <button class="btn-secondary" onclick="loadHealingCooldowns()">Load All Healing CDs</button>
+                <button class="btn-secondary" onclick="clearTimeline()">Clear</button>
+            </div>
+        </div>
+
+        <div id="content"></div>
+    </div>
+
+    <script>
+        // TWW Season 3 (2025) Healing & Defensive Cooldowns
+        const HEALING_COOLDOWNS = '740,197721,115310,31821,62618,64843,265202,114052,108280,98008,363534,355936,97462,196718';
+
+        const ABILITY_NAMES = {
+            // Druid - Restoration
+            740: 'Tranquility',
+            197721: 'Flourish',
+            // Monk - Mistweaver
+            115310: 'Revival',
+            // Paladin - Holy
+            31821: 'Aura Mastery',
+            // Priest - Discipline
+            62618: 'Power Word: Barrier',
+            // Priest - Holy
+            64843: 'Divine Hymn',
+            265202: 'Holy Word: Salvation',
+            // Shaman - Restoration
+            114052: 'Ascendance',
+            108280: 'Healing Tide Totem',
+            98008: 'Spirit Link Totem',
+            // Evoker - Preservation (NEW)
+            363534: 'Rewind',
+            355936: 'Dream Breath',
+            // Utility/Defensive
+            97462: 'Rallying Cry',
+            196718: 'Darkness'
+        };
+
+        function formatTime(timestamp) {
+            const seconds = Math.floor(timestamp / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function loadHealingCooldowns() {
+            document.getElementById('abilityIDs').value = HEALING_COOLDOWNS;
+            loadTimeline();
+        }
+
+        function clearTimeline() {
+            document.getElementById('content').innerHTML = '';
+        }
+
+        async function loadTimeline() {
+            const reportCode = document.getElementById('reportCode').value.trim();
+            const fightID = document.getElementById('fightID').value.trim();
+            const abilityIDs = document.getElementById('abilityIDs').value.trim();
+            const sourceID = document.getElementById('sourceID').value.trim();
+
+            if (!reportCode || !fightID) {
+                alert('Please enter Report Code and Fight ID');
+                return;
+            }
+
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading">Loading timeline data...</div>';
+
+            try {
+                // Fetch fight metadata to get actual fight duration
+                const reportResponse = await fetch(`/api/report/${reportCode}?fightIDs=${fightID}`);
+                const reportResult = await reportResponse.json();
+
+                let fightMetadata = null;
+                if (reportResult.success && reportResult.data?.reportData?.report?.fights) {
+                    fightMetadata = reportResult.data.reportData.report.fights.find(f => f.id === Number(fightID));
+                }
+
+                // Fetch skill timeline data
+                let url = `/api/report/${reportCode}/skills/${fightID}`;
+                const params = new URLSearchParams();
+                if (abilityIDs) params.append('abilityID', abilityIDs);
+                if (sourceID) params.append('sourceID', sourceID);
+                if (params.toString()) url += '?' + params.toString();
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.error?.message || 'Failed to load data');
+                }
+
+                // Add fight metadata to the data
+                result.data.fightMetadata = fightMetadata;
+                renderTimeline(result.data);
+            } catch (error) {
+                content.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function renderTimeline(data) {
+            const content = document.getElementById('content');
+            const { fightID, skillTimeline, rawEvents, fightMetadata, requestedAbilityIDs } = data;
+
+            console.log('=== RENDER TIMELINE DEBUG ===');
+            console.log('Fight ID:', fightID);
+            console.log('Requested Ability IDs:', requestedAbilityIDs);
+            console.log('Skill Timeline Keys:', Object.keys(skillTimeline));
+            console.log('Skill Timeline:', skillTimeline);
+            console.log('Number of skills in timeline:', Object.keys(skillTimeline).length);
+
+            // Log each skill and its cast count
+            Object.entries(skillTimeline).forEach(([skillId, times]) => {
+                const abilityName = ABILITY_NAMES[skillId] || `Ability ${skillId}`;
+                console.log(`  ${skillId} (${abilityName}): ${times.length} casts`);
+            });
+
+            if (!skillTimeline || Object.keys(skillTimeline).length === 0) {
+                content.innerHTML = '<div class="error">No skill casts found for this fight.</div>';
+                return;
+            }
+
+            // Get time range
+            let minTime, maxTime, duration;
+
+            // Use fight metadata if available for accurate fight duration
+            if (fightMetadata && fightMetadata.startTime !== undefined && fightMetadata.endTime !== undefined) {
+                minTime = fightMetadata.startTime;
+                maxTime = fightMetadata.endTime;
+                duration = maxTime - minTime;
+            } else {
+                // Fallback: calculate from events
+                minTime = Infinity;
+                maxTime = -Infinity;
+
+                // If we have raw events, use those
+                if (rawEvents && rawEvents.length > 0) {
+                    rawEvents.forEach(event => {
+                        if (event.timestamp) {
+                            minTime = Math.min(minTime, event.timestamp);
+                            maxTime = Math.max(maxTime, event.timestamp);
+                        }
+                    });
+                }
+
+                // Also check skill timeline times
+                Object.values(skillTimeline).forEach(times => {
+                    times.forEach(time => {
+                        minTime = Math.min(minTime, time);
+                        maxTime = Math.max(maxTime, time);
+                    });
+                });
+
+                duration = maxTime - minTime;
+            }
+
+            // Build timeline HTML
+            const fightName = fightMetadata?.name || `Fight ${fightID}`;
+            const killStatus = fightMetadata?.kill ? '✓ Kill' : '✗ Wipe';
+            const bossPercent = fightMetadata?.bossPercentage ? ` (${(fightMetadata.bossPercentage / 100).toFixed(1)}%)` : '';
+
+            // Show which abilities were found
+            let foundInfo = '';
+            if (requestedAbilityIDs && requestedAbilityIDs.length > 0) {
+                const foundCount = Object.keys(skillTimeline).length;
+                const requestedCount = requestedAbilityIDs.length;
+                foundInfo = `<p><strong>Abilities Found:</strong> ${foundCount} of ${requestedCount} requested</p>`;
+            }
+
+            let html = `
+                <div class="timeline-container">
+                    <div class="timeline-info">
+                        <h3>${fightName}${bossPercent ? bossPercent : ''}</h3>
+                        <p><strong>Status:</strong> ${killStatus}</p>
+                        <p><strong>Duration:</strong> ${formatTime(duration)}</p>
+                        ${foundInfo}
+                        <p><strong>Total Abilities Displayed:</strong> ${Object.keys(skillTimeline).length}</p>
+                        <p><strong>Total Casts:</strong> ${Object.values(skillTimeline).reduce((sum, times) => sum + times.length, 0)}</p>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-markers" id="timeline-markers-container">
+            `;
+
+            // Collect all cast events with positions
+            // Use 95% of the width to provide padding and prevent overflow
+            const allCasts = [];
+            Object.entries(skillTimeline).forEach(([skillId, times]) => {
+                times.forEach((timestamp, index) => {
+                    // Scale to 95% and add 2.5% offset to center it
+                    const position = 2.5 + ((timestamp - minTime) / duration) * 95;
+                    allCasts.push({
+                        skillId,
+                        timestamp,
+                        position,
+                        index,
+                        totalCasts: times.length
+                    });
+                });
+            });
+
+            // Sort by position to handle overlapping
+            allCasts.sort((a, b) => a.position - b.position);
+
+            console.log(`Total casts to render: ${allCasts.length}`);
+            console.log('All casts:', allCasts);
+
+            // Add time point markers first (on the line)
+            allCasts.forEach(cast => {
+                html += `<div class="time-point" style="left: ${cast.position}%;"></div>`;
+            });
+
+            // Calculate max height needed for stacking
+            let maxOffset = 0;
+
+            // Add skill markers with staggered vertical positioning to avoid overlap
+            allCasts.forEach((cast, idx) => {
+                const abilityName = ABILITY_NAMES[cast.skillId] || `Ability ${cast.skillId}`;
+
+                // Use Wowhead spell link which automatically loads icons
+                const wowheadIconHtml = `<a href="https://www.wowhead.com/spell=${cast.skillId}"
+                                            data-wowhead="spell=${cast.skillId}"
+                                            data-wh-icon-size="medium"
+                                            class="wowhead-spell-link"></a>`;
+
+                // Calculate vertical offset to prevent overlap - use smaller threshold for better distribution
+                let verticalOffset = 0;
+                for (let i = 0; i < idx; i++) {
+                    if (Math.abs(allCasts[i].position - cast.position) < 3) {
+                        verticalOffset += 70;
+                    }
+                }
+
+                maxOffset = Math.max(maxOffset, verticalOffset);
+
+                html += `
+                    <div class="timeline-marker" style="left: ${cast.position}%; top: ${125 - verticalOffset}px;">
+                        <div class="skill-icon" title="${abilityName} - ${formatTime(cast.timestamp - minTime)}" data-spell-id="${cast.skillId}">
+                            ${wowheadIconHtml}
+                            ${cast.totalCasts > 1 ? `<span class="skill-count">${cast.index + 1}</span>` : ''}
+                        </div>
+                        <div class="skill-time">${formatTime(cast.timestamp - minTime)}</div>
+                    </div>
+                `;
+            });
+
+            console.log(`Max vertical offset: ${maxOffset}px`);
+
+            html += `
+                        </div>
+                    </div>
+
+                    <div class="time-labels">
+            `;
+
+            // Add time labels (match the 95% scaling with 2.5% offset)
+            for (let i = 0; i <= 10; i++) {
+                const position = 2.5 + (i * 9.5);
+                const time = minTime + (duration * i / 10);
+                html += `<div class="time-label" style="left: ${position}%;">${formatTime(time - minTime)}</div>`;
+            }
+
+            html += `
+                    </div>
+
+                    <div class="legend">
+                        <h3>Abilities Used</h3>
+                        <div class="legend-items">
+            `;
+
+            // Add legend
+            Object.entries(skillTimeline).forEach(([skillId, times]) => {
+                const abilityName = ABILITY_NAMES[skillId] || `Ability ${skillId}`;
+                html += `
+                    <div class="legend-item">
+                        <div class="legend-color">${skillId}</div>
+                        <div class="legend-text">${abilityName}</div>
+                        <div class="legend-count">${times.length}x</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            content.innerHTML = html;
+
+            // Set dynamic height for timeline markers based on max offset
+            const timelineMarkers = document.getElementById('timeline-markers-container');
+            if (timelineMarkers && maxOffset > 0) {
+                const neededHeight = 300 + maxOffset;
+                timelineMarkers.style.height = `${neededHeight}px`;
+                console.log(`Set timeline-markers height to: ${neededHeight}px`);
+            }
+
+            // Refresh Wowhead tooltips to load icons
+            setTimeout(() => {
+                if (window.$WowheadPower) {
+                    window.$WowheadPower.refreshLinks();
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>

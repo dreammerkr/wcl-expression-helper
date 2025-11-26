@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCL Expression Helper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        @media (max-width: 1100px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .filter-group {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filter-group-header h3 {
+            color: #495057;
+            font-size: 1.1em;
+        }
+
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .remove-btn:hover {
+            background: #c82333;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 120px 120px 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .input-group select, .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.9em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group select:focus, .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .expression-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 150px;
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .copy-button:hover {
+            background: #5568d3;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+
+        .info-box a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .info-box a:hover {
+            text-decoration: underline;
+        }
+
+        .examples {
+            margin-top: 20px;
+        }
+
+        .example-item {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-item:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .example-item strong {
+            display: block;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .example-item code {
+            display: block;
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            overflow-x: auto;
+        }
+
+        .logical-operator {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            align-items: center;
+        }
+
+        .logical-operator select {
+            width: auto;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WCL Expression Helper</h1>
+            <p>Build filter expressions for Warcraft Logs</p>
+        </div>
+
+        <div class="content">
+            <!-- Left Side: Expression Builder -->
+            <div class="section">
+                <h2>Expression Builder</h2>
+
+                <div class="info-box">
+                    <strong>How it works:</strong> Build filter expressions visually by adding conditions. The tool will generate the proper WCL expression syntax that you can use in Warcraft Logs filters.
+                    <br><br>
+                    <a href="https://www.archon.gg/wow/articles/help/intro-to-expressions" target="_blank">📖 View WCL Expression Documentation</a>
+                </div>
+
+                <div id="filters-container"></div>
+
+                <div class="button-group">
+                    <button class="btn-success" onclick="addFilter()">+ Add Condition</button>
+                    <button class="btn-primary" onclick="generateExpression()">Generate Expression</button>
+                    <button class="btn-secondary" onclick="clearFilters()">Clear All</button>
+                </div>
+            </div>
+
+            <!-- Right Side: Generated Expression & Examples -->
+            <div class="section">
+                <h2>Generated Expression</h2>
+
+                <div class="expression-output" id="expressionOutput">
+                    <button class="copy-button" onclick="copyExpression()">Copy</button>
+                    <span style="color: #a0aec0;">Add conditions and click "Generate Expression" to see the result...</span>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <strong>Usage:</strong> Copy the generated expression and paste it into the "Filters" field on Warcraft Logs when viewing reports, rankings, or creating pins.
+                </div>
+
+                <div class="examples">
+                    <h2>Cooldown Sets</h2>
+                    <div class="example-item" onclick="loadExample('raid-defensives')">
+                        <strong>🛡️ Raid Defensive Cooldowns</strong>
+                        <code>ability.id IN (97462, 196718, 51052, 98008, 62618, 31821)</code>
+                    </div>
+                    <div class="example-item" onclick="loadExample('healing-cds')">
+                        <strong>💚 Healing Cooldowns</strong>
+                        <code>ability.id IN (740, 197721, 115310, 31821, 62618, 64843, 265202, 114052, 108280, 98008, 363534, 355936)</code>
+                    </div>
+                    <div class="example-item" onclick="loadExample('external-defensives')">
+                        <strong>🔰 External Defensives</strong>
+                        <code>ability.id IN (102342, 47788, 116849, 33206, 6940)</code>
+                    </div>
+
+                    <h2 style="margin-top: 20px;">Common Filters</h2>
+                    <div class="example-item" onclick="loadExample('specific-player')">
+                        <strong>Specific Player's Damage</strong>
+                        <code>source.name = "PlayerName" AND type = "damage"</code>
+                    </div>
+                    <div class="example-item" onclick="loadExample('death-count')">
+                        <strong>Death Events</strong>
+                        <code>type = "death"</code>
+                    </div>
+                    <div class="example-item" onclick="loadExample('critical-heals')">
+                        <strong>Critical Heals Only</strong>
+                        <code>type = "heal" AND isCritical = 1</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let filterCount = 0;
+
+        // Field definitions
+        const FIELDS = {
+            'Event': ['type', 'timestamp', 'encounterID', 'encounterDifficulty', 'encounterPhase'],
+            'Source': ['source.name', 'source.id', 'source.type', 'source.class', 'source.spec', 'source.role', 'source.disposition'],
+            'Target': ['target.name', 'target.id', 'target.type', 'target.class', 'target.spec', 'target.role', 'target.disposition'],
+            'Ability': ['ability.name', 'ability.id', 'ability.type'],
+            'Damage': ['rawDamage', 'effectiveDamage', 'absorbedDamage', 'overkill', 'isCritical', 'isTick', 'isGlancing', 'isMultistrike'],
+            'Healing': ['rawHealing', 'effectiveHealing', 'absorbedHealing', 'isCritical', 'isTick'],
+            'Resources': ['resources.hitPoints', 'resources.maxHitPoints', 'resources.hpPercent']
+        };
+
+        const OPERATORS = {
+            'Equals': '=',
+            'Not Equals': '!=',
+            'Greater Than': '>',
+            'Less Than': '<',
+            'Greater or Equal': '>=',
+            'Less or Equal': '<=',
+            'IN (list)': 'IN'
+        };
+
+        const EVENT_TYPES = ['damage', 'heal', 'cast', 'applybuff', 'removebuff', 'applydebuff', 'removedebuff', 'death', 'summon', 'begincast'];
+
+        function addFilter() {
+            filterCount++;
+            const container = document.getElementById('filters-container');
+
+            const filterDiv = document.createElement('div');
+            filterDiv.className = 'filter-group';
+            filterDiv.id = `filter-${filterCount}`;
+            filterDiv.innerHTML = `
+                <div class="filter-group-header">
+                    <h3>Condition ${filterCount}</h3>
+                    <button class="remove-btn" onclick="removeFilter(${filterCount})">Remove</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Field Category</label>
+                    <select onchange="updateFieldOptions(${filterCount})" id="category-${filterCount}">
+                        ${Object.keys(FIELDS).map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Field</label>
+                    <select id="field-${filterCount}">
+                        ${FIELDS['Event'].map(field => `<option value="${field}">${field}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Operator</label>
+                    <select id="operator-${filterCount}" onchange="updateValueInput(${filterCount})">
+                        ${Object.entries(OPERATORS).map(([name, op]) => `<option value="${op}">${name}</option>`).join('')}
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Value</label>
+                    <input type="text" id="value-${filterCount}" placeholder="Enter value...">
+                </div>
+            `;
+
+            // Add logical operator if this is not the first filter
+            if (container.children.length > 0) {
+                const logicalDiv = document.createElement('div');
+                logicalDiv.className = 'logical-operator';
+                logicalDiv.innerHTML = `
+                    <select id="logical-${filterCount}">
+                        <option value="AND">AND</option>
+                        <option value="OR">OR</option>
+                    </select>
+                `;
+                container.appendChild(logicalDiv);
+            }
+
+            container.appendChild(filterDiv);
+        }
+
+        function removeFilter(id) {
+            const filter = document.getElementById(`filter-${id}`);
+            const logical = document.getElementById(`logical-${id}`);
+
+            if (filter) filter.remove();
+            if (logical && logical.parentElement) logical.parentElement.remove();
+        }
+
+        function updateFieldOptions(id) {
+            const category = document.getElementById(`category-${id}`).value;
+            const fieldSelect = document.getElementById(`field-${id}`);
+
+            fieldSelect.innerHTML = FIELDS[category].map(field =>
+                `<option value="${field}">${field}</option>`
+            ).join('');
+        }
+
+        function updateValueInput(id) {
+            const operator = document.getElementById(`operator-${id}`).value;
+            const valueInput = document.getElementById(`value-${id}`);
+
+            if (operator === 'IN') {
+                valueInput.placeholder = 'Enter comma-separated values: 123, 456, 789';
+            } else {
+                valueInput.placeholder = 'Enter value...';
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filters-container').innerHTML = '';
+            filterCount = 0;
+            document.getElementById('expressionOutput').innerHTML = `
+                <button class="copy-button" onclick="copyExpression()">Copy</button>
+                <span style="color: #a0aec0;">Add conditions and click "Generate Expression" to see the result...</span>
+            `;
+        }
+
+        function generateExpression() {
+            const container = document.getElementById('filters-container');
+            const filters = container.querySelectorAll('.filter-group');
+
+            if (filters.length === 0) {
+                alert('Please add at least one condition');
+                return;
+            }
+
+            let expression = '';
+            let lastLogicalOp = '';
+
+            filters.forEach((filter, index) => {
+                const id = filter.id.split('-')[1];
+                const field = document.getElementById(`field-${id}`).value;
+                const operator = document.getElementById(`operator-${id}`).value;
+                const value = document.getElementById(`value-${id}`).value.trim();
+
+                if (!value) {
+                    return;
+                }
+
+                // Add logical operator if not first condition
+                if (index > 0) {
+                    const logicalSelect = document.getElementById(`logical-${id}`);
+                    if (logicalSelect) {
+                        expression += ` ${logicalSelect.value} `;
+                    }
+                }
+
+                // Build condition
+                if (operator === 'IN') {
+                    // Handle IN operator with list
+                    const values = value.split(',').map(v => v.trim());
+                    const formattedValues = values.map(v => {
+                        // Check if it's a number
+                        if (!isNaN(v)) {
+                            return v;
+                        } else {
+                            return `"${v}"`;
+                        }
+                    }).join(', ');
+                    expression += `${field} IN (${formattedValues})`;
+                } else {
+                    // Regular comparison
+                    // Check if value is a number
+                    if (!isNaN(value)) {
+                        expression += `${field} ${operator} ${value}`;
+                    } else {
+                        expression += `${field} ${operator} "${value}"`;
+                    }
+                }
+            });
+
+            // Display expression
+            const outputDiv = document.getElementById('expressionOutput');
+            outputDiv.innerHTML = `<button class="copy-button" onclick="copyExpression()">Copy</button>${expression || 'No valid conditions added'}`;
+        }
+
+        function copyExpression() {
+            const expressionText = document.getElementById('expressionOutput').textContent.replace('Copy', '').trim();
+            navigator.clipboard.writeText(expressionText).then(() => {
+                const button = document.querySelector('.copy-button');
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        function loadExample(example) {
+            clearFilters();
+
+            switch(example) {
+                case 'raid-defensives':
+                    addFilter();
+                    document.getElementById('category-1').value = 'Ability';
+                    updateFieldOptions(1);
+                    document.getElementById('field-1').value = 'ability.id';
+                    document.getElementById('operator-1').value = 'IN';
+                    updateValueInput(1);
+                    document.getElementById('value-1').value = '97462, 196718, 51052, 98008, 62618, 31821';
+                    break;
+
+                case 'healing-cds':
+                    addFilter();
+                    document.getElementById('category-1').value = 'Ability';
+                    updateFieldOptions(1);
+                    document.getElementById('field-1').value = 'ability.id';
+                    document.getElementById('operator-1').value = 'IN';
+                    updateValueInput(1);
+                    document.getElementById('value-1').value = '740, 197721, 115310, 31821, 62618, 64843, 265202, 114052, 108280, 98008, 363534, 355936';
+                    break;
+
+                case 'external-defensives':
+                    addFilter();
+                    document.getElementById('category-1').value = 'Ability';
+                    updateFieldOptions(1);
+                    document.getElementById('field-1').value = 'ability.id';
+                    document.getElementById('operator-1').value = 'IN';
+                    updateValueInput(1);
+                    document.getElementById('value-1').value = '102342, 47788, 116849, 33206, 6940';
+                    break;
+
+                case 'specific-player':
+                    addFilter();
+                    document.getElementById('category-1').value = 'Source';
+                    updateFieldOptions(1);
+                    document.getElementById('field-1').value = 'source.name';
+                    document.getElementById('operator-1').value = '=';
+                    document.getElementById('value-1').value = 'PlayerName';
+
+                    addFilter();
+                    document.getElementById('category-2').value = 'Event';
+                    updateFieldOptions(2);
+                    document.getElementById('field-2').value = 'type';
+                    document.getElementById('operator-2').value = '=';
+                    document.getElementById('value-2').value = 'damage';
+                    break;
+
+                case 'death-count':
+                    addFilter();
+                    document.getElementById('category-1').value = 'Event';
+                    updateFieldOptions(1);
+                    document.getElementById('field-1').value = 'type';
+                    document.getElementById('operator-1').value = '=';
+                    document.getElementById('value-1').value = 'death';
+                    break;
+
+                case 'critical-heals':
+                    addFilter();
+                    document.getElementById('category-1').value = 'Event';
+                    updateFieldOptions(1);
+                    document.getElementById('field-1').value = 'type';
+                    document.getElementById('operator-1').value = '=';
+                    document.getElementById('value-1').value = 'heal';
+
+                    addFilter();
+                    document.getElementById('category-2').value = 'Healing';
+                    updateFieldOptions(2);
+                    document.getElementById('field-2').value = 'isCritical';
+                    document.getElementById('operator-2').value = '=';
+                    document.getElementById('value-2').value = '1';
+                    break;
+            }
+
+            generateExpression();
+        }
+
+        // Initialize with one filter
+        addFilter();
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+# WCL Query Maker API Examples
+# Use with REST Client extension in VS Code or similar tools
+
+@baseUrl = http://localhost:3000
+@reportCode = ABC123
+
+### Health Check
+GET {{baseUrl}}/api/health
+
+### Get Full Report
+GET {{baseUrl}}/api/report/{{reportCode}}
+
+### Get Report with Specific Fights
+GET {{baseUrl}}/api/report/{{reportCode}}?fightIDs=1,2,3
+
+### Get Fight Details
+GET {{baseUrl}}/api/report/{{reportCode}}/fights/1,2
+
+### Get Damage Done Table
+GET {{baseUrl}}/api/report/{{reportCode}}/table/DamageDone?fightIDs=1,2
+
+### Get Healing Table
+GET {{baseUrl}}/api/report/{{reportCode}}/table/Healing?fightIDs=1
+
+### Get Damage Events
+GET {{baseUrl}}/api/report/{{reportCode}}/events/damage/1
+
+### Get Damage Events for Specific Player
+GET {{baseUrl}}/api/report/{{reportCode}}/events/damage/1?sourceID=5
+
+### Get Healing Events
+GET {{baseUrl}}/api/report/{{reportCode}}/events/healing/1
+
+### Get Deaths
+GET {{baseUrl}}/api/report/{{reportCode}}/deaths/1
+
+### Get Skill Timeline - All Skills
+GET {{baseUrl}}/api/report/{{reportCode}}/skills/1
+
+### Get Skill Timeline - Single Ability
+GET {{baseUrl}}/api/report/{{reportCode}}/skills/1?abilityID=12345
+
+### Get Skill Timeline - Multiple Abilities
+GET {{baseUrl}}/api/report/{{reportCode}}/skills/1?abilityID=12345,67890,11111
+
+### Get Skill Timeline - Specific Player
+GET {{baseUrl}}/api/report/{{reportCode}}/skills/1?sourceID=5
+
+### Get Skill Timeline - Multiple Abilities from Specific Player
+GET {{baseUrl}}/api/report/{{reportCode}}/skills/1?abilityID=12345,67890&sourceID=5
+
+### Get Character Data
+GET {{baseUrl}}/api/character/us/area-52/playerName
+
+### Get Guild Data
+GET {{baseUrl}}/api/guild/us/area-52/guildName
+
+### Custom GraphQL Query - Simple
+POST {{baseUrl}}/api/custom
+Content-Type: application/json
+
+{
+  "query": "query { reportData { report(code: \"{{reportCode}}\") { title startTime endTime } } }"
+}
+
+### Custom GraphQL Query - With Variables
+POST {{baseUrl}}/api/custom
+Content-Type: application/json
+
+{
+  "query": "query GetReport($code: String!) { reportData { report(code: $code) { title fights { id name kill } } } }",
+  "variables": {
+    "code": "{{reportCode}}"
+  }
+}
+
+### Custom GraphQL Query - Player Details
+POST {{baseUrl}}/api/custom
+Content-Type: application/json
+
+{
+  "query": "query { reportData { report(code: \"{{reportCode}}\") { masterData { actors(type: \"Player\") { id name type subType } } } } }"
+}
